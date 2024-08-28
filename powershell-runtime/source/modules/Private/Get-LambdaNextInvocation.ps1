@@ -25,6 +25,7 @@ function private:Get-LambdaNextInvocation {
     }
     catch {
         # If there is an error calling the Runtime API endpoint, ignore which tries again
+        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host ('[RUNTIME-Get-LambdaNextInvocation]incomingWebRequest.GetResponse() threw an exception: {0} Retrying...' -f $_.Exception) }
         continue
     }
 
