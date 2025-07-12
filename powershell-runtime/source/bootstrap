@@ -36,27 +36,27 @@ Import-Module '/opt/modules/pwsh-runtime.psd1'
 
 # Importing .NET class from .cs file to support the script property "RemainingTime" and method "getRemainingTimeInMillis".
 # This is taken from the Lambda .Net runtime LambdaContext code: https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.Core/ILambdaContext.cs
-if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-bootstrap]Importing .NET class from .cs file to support script properties and method' }
+Write-RuntimeLog 'Importing .NET class from .cs file to support script properties and method'
 Add-Type -TypeDefinition ([System.IO.File]::ReadAllText('/opt/PowerShellLambdaContext.cs'))
 
 # Modify $env:PSModulePath to support Lambda paths
-if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Modify PSModulePath to support Lambda paths'}
+Write-RuntimeLog 'Modify PSModulePath to support Lambda paths'
 Set-PSModulePath
 
 # Parse _HANDLER environment variable
-if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Parse _HANDLER environment variable'}
+Write-RuntimeLog 'Parse _HANDLER environment variable'
 $private:handlerArray = Get-Handler -Handler $env:_HANDLER
 
 ## Initiating function
 # Run function/module pre-handler initialization in global scope
-if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Run function/module pre-handler initialization in global scope'}
+Write-RuntimeLog 'Run function/module pre-handler initialization in global scope'
 switch ($private:handlerArray.handlerType) {
     'Function' {
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host "[RUNTIME-bootstrap]Dot sourcing PowerShell script: $($private:handlerArray.scriptFilePath)"}
+        Write-RuntimeLog "Dot sourcing PowerShell script: $($private:handlerArray.scriptFilePath)"
         . $private:handlerArray.ScriptFilePath
     }
     'Module' {
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host "[RUNTIME-bootstrap]Importing module: $($private:handlerArray.moduleName)"}
+        Write-RuntimeLog "Importing module: $($private:handlerArray.moduleName)"
         Import-Module -Name $private:handlerArray.moduleName -Force
     }
 }
@@ -66,40 +66,40 @@ $private:httpClient.Timeout = [System.Threading.Timeout]::InfiniteTimeSpan
 
 ## Event loop
 # Processes invocation events from Lambda Runtime API in a loop until runtime environment is terminated.
-if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Start event loop'}
+Write-RuntimeLog 'Start event loop'
 do {
     # Get /NEXT invocation from AWS Lambda Runtime API.
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Get /NEXT invocation from AWS Lambda Runtime API'}
+    Write-RuntimeLog 'Get /NEXT invocation from AWS Lambda Runtime API'
     $private:runtimeNextInvocationResponse = Get-LambdaNextInvocation $private:httpClient
 
     # Set default and AWS Lambda specific environment variables for each invocation
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Set default and AWS Lambda specific environment variables for each invocation'}
+    Write-RuntimeLog 'Set default and AWS Lambda specific environment variables for each invocation'
     Set-HandlerEnvironmentVariables $private:runtimeNextInvocationResponse.headers
 
     # Create the $LambdaContext object
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Create the $LambdaContext object'}
+    Write-RuntimeLog 'Create the $LambdaContext object'
     $private:LambdaContext = Set-LambdaContext
 
     try {
         # Run function handler from script/module
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Run function handler from script/module'}
+        Write-RuntimeLog 'Run function handler from script/module'
         $private:InvocationResponse = Invoke-FunctionHandler $private:runtimeNextInvocationResponse $private:handlerArray $private:LambdaContext
 
         # POST function handler response back to Runtime API
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]POST function handler response back to Runtime API'}
+        Write-RuntimeLog 'POST function handler response back to Runtime API'
 
         Send-FunctionHandlerResponse $private:httpClient $private:InvocationResponse
     }
     catch {
         # POST function invocation error back to Runtime API
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]POST function invocation error back to Runtime API'}
+        Write-RuntimeLog 'POST function invocation error back to Runtime API'
         Send-FunctionHandlerError $private:httpClient $_
     }
 
     # Cleanup
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Cleanup'}
+    Write-RuntimeLog 'Cleanup'
     Remove-Variable -Name 'LambdaInput', 'LambdaContext', 'private:LambdaContext', 'private:runtimeNextInvocationResponse', 'private:InvocationResponse' -ErrorAction 'SilentlyContinue'
     $env:_X_AMZN_TRACE_ID = ''
 }
 while ($true)
-if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {Write-Host '[RUNTIME-bootstrap]Complete event loop, spindown runtime environment'}
+Write-RuntimeLog 'Complete event loop, spindown runtime environment'
