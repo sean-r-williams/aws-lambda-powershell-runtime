@@ -5,23 +5,23 @@ if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {
     $VerbosePreference = 'continue'
 
     # Pre-import bootstrap log function
-    Function private:__BootstrapLog {
-        param($Message)
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {
-            If ($env:AWS_LAMBDA_LOG_FORMAT -eq "JSON") {
-                Write-Host (
-                    @{
-                        logger = "RUNTIME"
-                        source = "bootstrap"
-                        message = $Message
-                    } | ConvertTo-Json -Compress -Depth 4
-                )
-            } Else {
-                Write-Host "[RUNTIME-bootstrap]$Message"
-            }
+}
+Function private:__BootstrapLog {
+    param($Message)
+    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') {
+        If ($env:AWS_LAMBDA_LOG_FORMAT -eq "JSON") {
+            Write-Host (
+                @{
+                    logger = "RUNTIME"
+                    source = "bootstrap"
+                    message = $Message
+                } | ConvertTo-Json -Compress -Depth 4
+            )
+        } Else {
+            Write-Host "[RUNTIME-bootstrap]$Message"
         }
-
     }
+
 }
 __BootstrapLog 'Start: bootstrap'
 ## Initiating custom runtime
