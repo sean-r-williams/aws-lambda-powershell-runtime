@@ -28,12 +28,12 @@ function _SendRuntimeApiRequest {
     $private:request.RequestUri = $private:Uri
     $private:request.Content = [System.Net.Http.StringContent]::new($private:Body)
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host "[RUNTIME-SendRuntimeApiRequest]Sending request to Runtime API: $(ConvertTO-Json -Compress -InputObject $private:request -Depth 5)" }
+    Write-RuntimeLog "Sending request to Runtime API: $(ConvertTO-Json -Compress -InputObject $private:request -Depth 5)"
 
     $private:runtimeResponse = $private:HttpClient.SendAsync($private:request).GetAwaiter().GetResult()
     $private:runtimeResponseContent =  $private:runtimeResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult()
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host "[RUNTIME-SendRuntimeApiRequest]Runtime API Response: $private:runtimeResponseContent" }
+    Write-RuntimeLog "Runtime API Response: $private:runtimeResponseContent"
 
     if ($private:runtimeResponse) { $private:runtimeResponse.Dispose() }
 }

@@ -12,9 +12,9 @@ function Private:Set-LambdaContext {
             In the Lambda runtime, this is handled by the bootstrap script.
     #>
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Set-LambdaContext]Start: Set-LambdaContext' }
+    Write-RuntimeLog 'Start: Set-LambdaContext'
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Set-LambdaContext]Creating LambdaContext' }
+    Write-RuntimeLog 'Creating LambdaContext'
     $private:LambdaContext = [Amazon.Lambda.PowerShell.Internal.LambdaContext]::new(
         $env:AWS_LAMBDA_FUNCTION_NAME,
         $env:AWS_LAMBDA_FUNCTION_VERSION,
@@ -27,6 +27,6 @@ function Private:Set-LambdaContext {
         $env:AWS_LAMBDA_RUNTIME_CLIENT_CONTEXT,
         [double]$env:AWS_LAMBDA_RUNTIME_DEADLINE_MS
     )
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host "[RUNTIME-Set-LambdaContext]Return LambdaContext: $(ConvertTo-Json -InputObject $private:LambdaContext -Compress)" }
+    Write-RuntimeLog "Return LambdaContext: $(ConvertTo-Json -InputObject $private:LambdaContext -Compress)"
     return $private:LambdaContext
 }

@@ -21,7 +21,7 @@ function private:Send-FunctionHandlerError {
         $private:Exception
     )
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Send-FunctionHandlerError]Start: Send-FunctionHandlerError' }
+    Write-RuntimeLog 'Start: Send-FunctionHandlerError'
     Write-Host $private:Exception
 
     $private:uri = "http://$env:AWS_LAMBDA_RUNTIME_API/2018-06-01/runtime/invocation/$env:AWS_LAMBDA_RUNTIME_AWS_REQUEST_ID/error"

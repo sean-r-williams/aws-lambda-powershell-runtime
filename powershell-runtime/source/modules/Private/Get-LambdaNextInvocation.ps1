@@ -17,9 +17,9 @@ function private:Get-LambdaNextInvocation {
         [System.Net.Http.HttpClient]$private:HttpClient
     )
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Start: Get-LambdaNextInvocation' }
+    Write-RuntimeLog 'Start: Get-LambdaNextInvocation'
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Create GET request to Runtime API' }
+    Write-RuntimeLog 'Create GET request to Runtime API'
 
     $private:request = [System.Net.Http.HttpRequestMessage]::new()
     $private:request.Headers.Add('User-Agent', "aws-lambda-powershell/$env:POWERSHELL_VERSION")
@@ -28,25 +28,25 @@ function private:Get-LambdaNextInvocation {
 
     try {
         # Get the next invocation
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Get the next invocation' }
+        Write-RuntimeLog 'Get the next invocation'
         $private:response = $private:HttpClient.SendAsync($private:request).GetAwaiter().GetResult()
     }
     catch {
         # If there is an error calling the Runtime API endpoint, ignore which tries again
-        if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host "[RUNTIME-Get-LambdaNextInvocation]Exception caught: $($_.Exception.Message)" }
+        Write-RuntimeLog "Exception caught: $($_.Exception.Message)"
         continue
     }
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Read the response content' }
+    Write-RuntimeLog 'Read the response content'
     $private:incomingEvent = $private:response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Generate the correct response headers' }
+    Write-RuntimeLog 'Generate the correct response headers'
     $private:incomingHeaders = @{}
     foreach ($private:header in $private:response.Headers) {
         $private:incomingHeaders[$private:header.Key] = $private:header.Value
     }
 
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Create a response object' }
+    Write-RuntimeLog 'Create a response object'
     $private:NextInvocationResponseObject = [pscustomobject]@{
         headers       = $private:incomingHeaders
         incomingEvent = $private:incomingEvent
@@ -54,6 +54,6 @@ function private:Get-LambdaNextInvocation {
 
     if ($private:response) { $private:response.Dispose() }
     if ($private:responseStream) { $private:responseStream.Dispose() }
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Get-LambdaNextInvocation]Return response object' }
+    Write-RuntimeLog 'Return response object'
     return [pscustomobject]$private:NextInvocationResponseObject
 }

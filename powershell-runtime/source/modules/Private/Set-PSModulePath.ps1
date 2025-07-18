@@ -15,12 +15,12 @@ function private:Set-PSModulePath {
                 2: User supplied modules as part of Lambda Layers
                 3: User supplied modules as part of function package
     #>
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Set-PSModulePath]Start: Set-PSModulePath' }
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host '[RUNTIME-Set-PSModulePath]Setting PSModulePath environment variable' }
+    Write-RuntimeLog 'Start: Set-PSModulePath'
+    Write-RuntimeLog 'Setting PSModulePath environment variable'
     $env:PSModulePath = @(
         '/opt/powershell/modules', # Modules supplied with pwsh
         '/opt/modules', # User supplied modules as part of Lambda Layers
         [System.IO.Path]::Combine($env:LAMBDA_TASK_ROOT, 'modules') # User supplied modules as part of function package
     ) -join ':'
-    if ($env:POWERSHELL_RUNTIME_VERBOSE -eq 'TRUE') { Write-Host "[RUNTIME-Set-PSModulePath]PSModulePath environment variable set to: $($env:PSModulePath)" }
+    Write-RuntimeLog "PSModulePath environment variable set to: $($env:PSModulePath)"
 }
