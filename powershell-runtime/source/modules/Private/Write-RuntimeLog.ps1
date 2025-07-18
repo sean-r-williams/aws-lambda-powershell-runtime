@@ -13,7 +13,7 @@
 #>
 
 
-function Private:Write-RuntimeLog {
+function Write-RuntimeLog {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -28,9 +28,12 @@ function Private:Write-RuntimeLog {
         )]
         [string]
         $Source = $(
-            (Get-Variable MyInvocation -Scope 1 -ValueOnly).MyCommand.Name ??
-            (Get-Variable MyInvocation -Scope 1 -ValueOnly).ScriptName ??
-            "<unknown>"
+            @(
+                $PSCmdlet.SessionState.PSVariable.Get("MyInvocation").Value.MyCommand.Name
+                $PSCmdlet.SessionState.PSVariable.Get("MyInvocation").Value.ScriptName
+                (Get-Variable MyInvocation -Scope 1 -ValueOnly).ScriptName
+                "<unknown>"
+            ) | Where-Object {-not [string]::IsNullOrEmpty($_)} | Select-Object -First 1
         )
     )
 
